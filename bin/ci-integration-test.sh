@@ -21,15 +21,51 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
+set_env_var() {
+    local key="$1"
+    local value="$2"
+    local tmp_file
+    tmp_file="$(mktemp)"
+
+    if grep -q "^${key}=" .env; then
+        awk -v key="$key" -v value="$value" '
+            BEGIN { FS = OFS = "=" }
+            $1 == key { $0 = key "=" value }
+            { print }
+        ' .env > "$tmp_file"
+    else
+        cp .env "$tmp_file"
+        printf "%s=%s\n" "$key" "$value" >> "$tmp_file"
+    fi
+
+    mv "$tmp_file" .env
+}
+
+echo "[INFO] Ajustando UID/GID do .env para o usuário do runner..."
+set_env_var "UID" "$(id -u)"
+set_env_var "GID" "$(id -g)"
+
+echo "[INFO] Garantindo diretórios locais graváveis antes dos bind mounts..."
+mkdir -p logs data
+
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker-compose)
+else
+    echo "[ERRO] Docker Compose não encontrado. Instale o plugin 'docker compose' ou o binário 'docker-compose'."
+    exit 1
+fi
+
 echo "=== [INTEGRAÇÃO] Inicializando os containers Docker (Build)...=="
-docker compose down -v --remove-orphans || true
-docker compose up -d --build
+"${COMPOSE_CMD[@]}" down -v --remove-orphans || true
+"${COMPOSE_CMD[@]}" up -d --build
 
 # Função de limpeza automática ao sair do script
 cleanup() {
     local exit_code=$?
     echo "=== [INTEGRAÇÃO] Limpando recursos do Docker Compose... ==="
-    docker compose down -v || true
+    "${COMPOSE_CMD[@]}" down -v || true
     exit $exit_code
 }
 trap cleanup EXIT
