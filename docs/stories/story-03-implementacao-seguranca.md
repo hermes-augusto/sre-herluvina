@@ -1,7 +1,7 @@
 # Story: Implementação do Hardening de Segurança com Foco em Portabilidade - Northwind Traders
 
 **ID**: STORY-03  
-**Status**: To Do  
+**Status**: Completed  
 **Autor**: SRE / Security Engineer  
 
 Esta story gerencia a implementação das defesas de segurança detalhadas em [documents/06_security_test_plan.md](file:///workspaces/sre-herluvina/documents/06_security_test_plan.md), redesenhadas sob a premissa de **portabilidade absoluta** e facilidade de instalação (DevEx). As melhorias de segurança (login, HTTPS, retry de concorrência e não-root) serão configuradas para serem automáticas ou parametrizáveis via variáveis de ambiente no `.env`, garantindo que qualquer desenvolvedor consiga clonar e rodar o projeto localmente com configuração zero (*plug-and-play*).
@@ -20,31 +20,34 @@ Esta story gerencia a implementação das defesas de segurança detalhadas em [d
 
 ## 2. Checklist de Progresso
 
-- [ ] **Etapa 1: Segurança de Acesso e Gestão de Segredos**
-  - [ ] Adicionar variáveis `DASHBOARD_USER` e `DASHBOARD_PASSWORD` no `.env.example`
-  - [ ] Implementar interface de login básica e segura em `app/main.py` consumindo estas variáveis de ambiente
-  - [ ] Remover fallbacks de credenciais do MinIO do código em `app/ingest.py` e forçar interrupção com erro caso ausentes
-  - [ ] Instalar o hook de pré-commit do Gitleaks de forma opcional via script de inicialização local
-- [ ] **Etapa 2: HTTPS Automático Opcional e Hardening de Permissões**
-  - [ ] Adicionar variável `STREAMLIT_ENABLE_SSL=false` no `.env.example`
-  - [ ] Criar script de inicialização Python (`app/entrypoint.py`) que gera chaves OpenSSL autoassinadas caso `STREAMLIT_ENABLE_SSL=true` e os arquivos não existam
-  - [ ] Atualizar `docker-compose.yml` para expor o Streamlit em HTTPS condicional e rodar sob o ID do usuário do host de forma dinâmica (`user: "${UID}:${GID}"`)
-  - [ ] Testar montagem de volume `./data` em modo leitura/escrita sob a nova regra de permissões em diferentes sistemas
-- [ ] **Etapa 3: Resiliência de Banco e Automação de Scans CLI**
-  - [ ] Implementar lógica de Retry (3 tentativas com sleep de 0.5s) para capturar exceções de lock do DuckDB em `app/main.py`
-  - [ ] Criar script CLI `bin/run-security-scans.sh` que executa Bandit (SAST), Trivy (SCA) e Gitleaks (Secrets) via Docker local sob demanda
-  - [ ] Validar a execução ponta a ponta dos testes de segurança (`TC-SEC-01` a `TC-SEC-05`)
-  - [ ] Atualizar os status na Matriz de Rastreabilidade (RTM)
+- [x] **Etapa 1: Segurança de Acesso e Gestão de Segredos**
+  - [x] Adicionar variáveis `DASHBOARD_USER` e `DASHBOARD_PASSWORD` no `.env.example`
+  - [x] Implementar interface de login básica e segura em `app/main.py` consumindo estas variáveis de ambiente
+  - [x] Remover fallbacks de credenciais do MinIO do código em `app/ingest.py` e forçar interrupção com erro caso ausentes
+  - [x] Instalar o hook de pré-commit do Gitleaks de forma opcional via script de inicialização local
+- [x] **Etapa 2: HTTPS Automático Opcional e Hardening de Permissões**
+  - [x] Adicionar variável `STREAMLIT_ENABLE_SSL=false` no `.env.example`
+  - [x] Criar script de inicialização Python (`app/entrypoint.py`) que gera chaves OpenSSL autoassinadas caso `STREAMLIT_ENABLE_SSL=true` e os arquivos não existam
+  - [x] Atualizar `docker-compose.yml` para expor o Streamlit em HTTPS condicional e rodar sob o ID do usuário do host de forma dinâmica (`user: "${UID}:${GID}"`)
+  - [x] Testar montagem de volume `./data` em modo leitura/escrita sob a nova regra de permissões em diferentes sistemas
+- [x] **Etapa 3: Resiliência de Banco e Automação de Scans CLI**
+  - [x] Implementar lógica de Retry (3 tentativas com sleep de 0.5s) para capturar exceções de lock do DuckDB em `app/main.py`
+  - [x] Criar script CLI `bin/run-security-scans.sh` que executa Bandit (SAST), Trivy (SCA) e Gitleaks (Secrets) via Docker local sob demanda
+  - [x] Validar a execução ponta a ponta dos testes de segurança (`TC-SEC-01` a `TC-SEC-05`)
+  - [x] Atualizar os status na Matriz de Rastreabilidade (RTM)
 
 ---
 
 ## 3. Lista de Arquivos Planejada (File List)
 
-- [ ] `app/entrypoint.py` -> Script em Python para checagem e geração dinâmica de SSL e boot da aplicação.
-- [ ] `bin/run-security-scans.sh` -> Script de disparo dos scans de segurança rodando k6 e contêineres de validação estática.
-- [ ] `app/main.py` -> Editado para incluir tratamento de login local e retries de conexão do DuckDB.
-- [ ] `Dockerfile` -> Atualizado para configurar o usuário dinâmico e dependências de criptografia do Python.
-- [ ] `docker-compose.yml` -> Editado para dar suporte ao mapeamento dinâmico de IDs de usuário do host.
+- [x] `app/entrypoint.py` -> Script em Python para checagem e geração dinâmica de SSL e boot da aplicação.
+- [x] `bin/run-security-scans.sh` -> Script de disparo dos scans de segurança rodando Bandit, Trivy e Gitleaks.
+- [x] `app/main.py` -> Editado para incluir tratamento de login local e retries de conexão do DuckDB.
+- [x] `Dockerfile` -> Atualizado para configurar o usuário dinâmico e dependências de criptografia do Python.
+- [x] `docker-compose.yml` -> Editado para dar suporte ao mapeamento dinâmico de IDs de usuário do host.
+- [x] `bin/setup-pre-commit.sh` -> Script para instalação e setup opcional do hook de pré-commit do Gitleaks.
+- [x] `gitleaks.toml` -> Configuração de caminhos do allowlist para evitar falsos positivos no Gitleaks.
+- [x] `.gitleaksignore` -> Assinaturas de impressões digitais de falsos-positivos permitidos no repositório.
 
 ---
 

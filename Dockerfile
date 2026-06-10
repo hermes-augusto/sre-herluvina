@@ -16,10 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     git \
+    openssl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+RUN mkdir -p /app/certs && chmod 777 /app/certs
 
 # Copia e instala dependências do Python
 COPY requirements.txt .

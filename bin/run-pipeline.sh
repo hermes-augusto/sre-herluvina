@@ -14,7 +14,8 @@
 set -e # Aborta o script em caso de falha em qualquer comando
 
 # Configuração de caminhos e logs
-CWD="/workspaces/sre-herluvina"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CWD="$(cd "$SCRIPT_DIR/.." && pwd)"
 LOG_DIR="$CWD/logs"
 LOG_FILE="$LOG_DIR/pipeline_$(date +'%Y%m%d_%H%M%S').log"
 

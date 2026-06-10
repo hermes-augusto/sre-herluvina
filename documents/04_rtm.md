@@ -29,7 +29,7 @@ A tabela abaixo vincula os requisitos aos componentes RM-ODP e aos casos de test
 | **RNF-08** | Não Funcional | Engenharia, SRE / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | `dbt CLI Engine` (Materialization strategies) | `TC-17` | **Coberto** |
 | **RNF-09** | Não Funcional | SRE / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | *Nenhum componente nativo* (Ver Seção 3) | `TC-18` / `TC-25` / `TC-26` / `TC-27` / `TC-SEC-03` | **Coberto** |
 | **RNF-10** | Não Funcional | SRE / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | `Docker Compose` / `.gitignore` | `TC-19` / `TC-SEC-01` / `TC-SEC-04` | **Coberto** |
-| **RNF-11** | Não Funcional | Engenharia de Dados / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | *Nenhum componente nativo* (Ver Seção 3) | `TC-20` / `TC-SEC-05` | **Aberto** |
+| **RNF-11** | Não Funcional | Engenharia de Dados / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | `app/audit.py` / `audit_log` DuckDB | `TC-20` / `TC-SEC-05` | **Coberto** |
 | **RNF-12** | Não Funcional | SRE, Engenharia de Dados / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | `Pipeline Shell Trigger` (Alerting routine) | `TC-21` | **Coberto** |
 | **RNF-13** | Não Funcional | Engenharia de Dados / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | `dbt CLI Engine` (dbt-expectations) | `TC-22` | **Coberto** |
 | **RNF-14** | Não Funcional | SRE, Engenharia de Dados / [02_non_functional_requirements.md](file:///workspaces/sre-herluvina/documents/02_non_functional_requirements.md) | `Docker Compose` (Setup verification) | `TC-23` / `TC-SEC-02` | **Coberto** |
@@ -83,9 +83,9 @@ Identificamos inicialmente duas brechas analíticas (gaps) na infraestrutura loc
 *   **Motivo**: O DuckDB é um banco de dados embarcado e sem servidor (serverless/embedded). Ele funciona lendo e gravando direto em um arquivo local (`northwind.duckdb`). Isso significa que não há um "processo/serviço" de banco de dados que fica rodando continuamente em segundo plano para aceitar conexões TCP. O Uptime de 99.0% especificado em RNF-09 não pode ser testado por monitoramento de porta tradicional (ex: ping na porta 5432).
 *   **Mitigação Adotada**: Coberto e mitigado por meio do plano de testes de carga em [documents/05_performance_test_plan.md](file:///workspaces/sre-herluvina/documents/05_performance_test_plan.md) (`TC-25`, `TC-26`, `TC-27`), que validam a disponibilidade do ecossistema local e a integridade de acesso ao arquivo DuckDB sob estresse contínuo pela aplicação do Streamlit.
 
-### Gap 2: RNF-11 (Rastreabilidade de Alterações de Dados - Logs DML) - Aberto
+### Gap 2: RNF-11 (Rastreabilidade de Alterações de Dados - Logs DML) - Mitigado e Coberto
 *   **Motivo**: Como o DuckDB é um motor SQL embarcado em arquivos, ele não possui recursos nativos corporativos de triggers DML (tabelas de histórico de auditoria preenchidas automaticamente por gatilhos do banco ao inserir/deletar/atualizar linhas) e logs nativos avançados como o WAL (Write-Ahead Logging) do PostgreSQL. 
-*   **Mitigação Recomendada**: A auditoria das transformações deve ser implementada no nível da aplicação (via logs detalhados do dbt nas tabelas de run do dbt-artifacts ou por meio de tabelas de log preenchidas pelo próprio pipeline no dbt).
+*   **Mitigação Adotada**: Coberto e mitigado por meio do script de auditoria quantitativa no nível da aplicação (`app/audit.py`), que persiste registros e status detalhados de reconciliação de volumes na tabela de logs de auditoria (`audit_log`) do DuckDB a cada execução do pipeline.
 
 ---
 

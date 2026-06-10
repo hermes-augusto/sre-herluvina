@@ -17,12 +17,13 @@ import sys
 import pandas as pd
 import duckdb
 
+
 def main():
     print("=== [AUDITORIA] Iniciando reconciliação quantitativa de registros ===")
-    
+
     csv_details_path = "/app/data/northwind_order_details.csv"
     db_path = os.getenv("DUCKDB_DATABASE_PATH", "/app/data/northwind.duckdb")
-    
+
     # 1. Valida existência dos caminhos
     if not os.path.exists(csv_details_path):
         print(f"[ERRO] Arquivo CSV de detalhes não localizado: {csv_details_path}")
@@ -30,7 +31,7 @@ def main():
     if not os.path.exists(db_path):
         print(f"[ERRO] Arquivo do banco DuckDB não localizado: {db_path}")
         sys.exit(1)
-        
+
     # 2. Conta linhas no CSV original usando pandas para garantir precisão
     try:
         df_csv = pd.read_csv(csv_details_path)
@@ -39,21 +40,25 @@ def main():
     except Exception as e:
         print(f"[ERRO] Falha ao ler o arquivo CSV para auditoria: {e}")
         sys.exit(1)
-        
+
     # 3. Conta registros na tabela fato fct_order_items do DuckDB
     try:
         conn = duckdb.connect(db_path, read_only=True)
         db_res = conn.execute("select count(*) from fct_order_items").fetchone()
         db_count = db_res[0] if db_res else 0
         conn.close()
-        print(f"[AUDITORIA] Registros persistidos na fato (fct_order_items): {db_count}")
+        print(
+            f"[AUDITORIA] Registros persistidos na fato (fct_order_items): {db_count}"
+        )
     except Exception as e:
         print(f"[ERRO] Falha ao consultar o banco DuckDB para auditoria: {e}")
         sys.exit(1)
-        
+
     # 4. Compara e reconcilia os volumes
     if csv_count != db_count:
-        print(f"[ALERT] DIVERGÊNCIA DETECTADA! Perda Silenciosa de Linhas! Origem: {csv_count} | Fato: {db_count}")
+        print(
+            f"[ALERT] DIVERGÊNCIA DETECTADA! Perda Silenciosa de Linhas! Origem: {csv_count} | Fato: {db_count}"
+        )
         # Grava log de falha na auditoria (abre em modo leitura/escrita)
         try:
             conn = duckdb.connect(db_path, read_only=False)
@@ -67,16 +72,19 @@ def main():
                     description varchar
                 )
             """)
-            conn.execute("""
+            conn.execute(
+                """
                 insert into audit_log (event_type, status, csv_rows, db_rows, description)
                 values ('PIPELINE_RUN', 'FAILURE', ?, ?, 'Reconciliação falhou devido a divergência quantitativa.')
-            """, (csv_count, db_count))
+            """,
+                (csv_count, db_count),
+            )
             conn.close()
         except Exception as write_err:
             print(f"[ERRO] Falha ao gravar falha na tabela audit_log: {write_err}")
         # Retorna erro conforme RNF-02 / TC-11
         sys.exit(1)
-        
+
     # 5. Grava registro de auditoria com sucesso na base (abre em modo leitura/escrita)
     try:
         print("[AUDITORIA] Registrando auditoria com sucesso no DuckDB...")
@@ -91,18 +99,22 @@ def main():
                 description varchar
             )
         """)
-        conn.execute("""
+        conn.execute(
+            """
             insert into audit_log (event_type, status, csv_rows, db_rows, description)
             values ('PIPELINE_RUN', 'SUCCESS', ?, ?, 'Reconciliação quantitativa realizada com 100% de paridade.')
-        """, (csv_count, db_count))
+        """,
+            (csv_count, db_count),
+        )
         conn.close()
         print("[AUDITORIA] Evento gravado na tabela 'audit_log'.")
     except Exception as e:
         print(f"[ERRO] Falha ao gravar log de auditoria no DuckDB: {e}")
         sys.exit(1)
-        
+
     print("=== [AUDITORIA] Reconciliação concluída com sucesso (100% de paridade)! ===")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

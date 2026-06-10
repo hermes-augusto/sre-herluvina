@@ -35,8 +35,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: northwind-pipeline
+    user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - .env
+    environment:
+      HOME: /tmp
     volumes:
       - ./data:/app/data
       - ./bin:/app/bin
@@ -52,11 +55,14 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: northwind-streamlit
-    command: streamlit run app/main.py --server.port 8501 --server.address 0.0.0.0
+    user: "${UID:-1000}:${GID:-1000}"
+    command: python3 app/entrypoint.py
     ports:
       - "8501:8501"
     env_file:
       - .env
+    environment:
+      HOME: /tmp
     volumes:
       - ./data:/app/data
       - ./app:/app/app

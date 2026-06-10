@@ -1,0 +1,13 @@
+# .gitleaksignore
+#
+# Riscos:
+# 1. Ignorar acidentalmente vazamentos válidos de chaves de produção se os hashes de commits forem incluídos erroneamente no ignore.
+# 2. Perda de controle se o arquivo .gitleaksignore crescer muito, mascarando vulnerabilidades acumuladas.
+# 3. Desenvolvedores mal-intencionados adicionarem impressões digitais de vazamentos ativos para burlar o commit.
+#
+# Ambiguidades:
+# 1. Se o formato do fingerprint aceita comentários inline na mesma linha da chave.
+# 2. Se a reescrita de histórico do Git invalida as assinaturas (fingerprints) cadastradas no ignore.
+
+# Ignora o falso-positivo na documentação do framework AIOX
+48dd097fd9f09ed76b34e819962e72889030c898:.aiox-core/development/tasks/qa-security-checklist.md:generic-api-key:492
