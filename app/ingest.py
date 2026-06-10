@@ -27,8 +27,13 @@ def main():
     if not endpoint_url.startswith("http"):
         endpoint_url = f"http://{endpoint_url}"
         
-    access_key = os.getenv("AWS_ACCESS_KEY_ID", "admin")
-    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "supersecretpassword")
+    access_key = os.getenv("AWS_ACCESS_KEY_ID")
+    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    
+    if not access_key or not secret_key:
+        print("[ERRO] Credenciais S3/MinIO (AWS_ACCESS_KEY_ID e AWS_SECRET_ACCESS_KEY) não estão configuradas no ambiente.")
+        sys.exit(1)
+        
     bucket_name = "northwind-raw"
     
     files_to_upload = {

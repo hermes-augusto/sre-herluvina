@@ -10,6 +10,7 @@
 # 2. Se a biblioteca Plotly Express gerará lentidão ao renderizar gráficos dinâmicos no navegador do host.
 
 import os
+import time
 import streamlit as st
 import duckdb
 import pandas as pd
@@ -60,18 +61,60 @@ st.markdown("""
 db_path = os.getenv("DUCKDB_DATABASE_PATH", "/app/data/northwind.duckdb")
 
 def run_query(query):
-    """Executa consultas de forma segura e somente-leitura no DuckDB"""
-    try:
-        conn = duckdb.connect(db_path, read_only=True)
-        df = conn.execute(query).df()
-        conn.close()
-        return df
-    except Exception as e:
-        st.error(f"Erro ao acessar o banco DuckDB: {e}")
-        return None
+    """Executa consultas de forma segura e somente-leitura no DuckDB com lógica de Retry"""
+    retries = 3
+    delay = 0.5
+    for i in range(retries):
+        try:
+            conn = duckdb.connect(db_path, read_only=True)
+            df = conn.execute(query).df()
+            conn.close()
+            return df
+        except Exception as e:
+            # Se o erro indicar que o banco está bloqueado por escrita, tenta novamente
+            if "locked" in str(e).lower() and i < retries - 1:
+                time.sleep(delay)
+                continue
+            st.error(f"Erro ao acessar o banco DuckDB: {e}")
+            return None
 
 # Título Principal
 st.markdown("<h1 class='main-header'>📊 Painel Analítico de Vendas & Logística - Northwind Traders</h1>", unsafe_allow_html=True)
+
+# 2. Autenticação Básica (Portabilidade-First)
+def check_password():
+    """Retorna True se o usuário inseriu as credenciais corretas."""
+    dashboard_user = os.getenv("DASHBOARD_USER")
+    dashboard_password = os.getenv("DASHBOARD_PASSWORD")
+    
+    if not dashboard_user or not dashboard_password:
+        st.warning("⚠️ Credenciais de acesso não configuradas no arquivo de ambiente (.env).")
+        st.stop()
+        
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+        
+    if st.session_state["authenticated"]:
+        return True
+        
+    # Exibe interface de Login
+    st.write("")
+    col_login, _ = st.columns([1, 2])
+    with col_login:
+        st.subheader("🔑 Login de Acesso")
+        user_input = st.text_input("Usuário", key="login_username")
+        pass_input = st.text_input("Senha", type="password", key="login_password")
+        if st.button("Acessar"):
+            if user_input == dashboard_user and pass_input == dashboard_password:
+                st.session_state["authenticated"] = True
+                st.success("Acesso concedido!")
+                st.rerun()
+            else:
+                st.error("⚠️ Usuário ou senha incorretos.")
+    return False
+
+if not check_password():
+    st.stop()
 
 if not os.path.exists(db_path):
     st.warning("⚠️ Banco de dados analítico local `northwind.duckdb` não localizado. Por favor, execute o pipeline de dados via terminal primeiro.")
