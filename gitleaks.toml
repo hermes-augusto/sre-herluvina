@@ -1,0 +1,17 @@
+# gitleaks.toml
+#
+# Riscos:
+# 1. Ignorar acidentalmente vazamentos legítimos de segredos se as regras do allowlist forem muito abrangentes (ex: regex frouxa).
+# 2. Desatualização das regras locais de detecção em relação às definições globais atualizadas do Gitleaks.
+# 3. Desenvolvedores alterarem o arquivo localmente para mascarar credenciais chumbadas de teste.
+#
+# Ambiguidades:
+# 1. Se devemos incluir arquivos de documentação (.md) no escopo geral de exclusão ou varrer todos exceto diretórios de sistema.
+# 2. Se a sintaxe de regex de caminhos suporta escape de diretório padrão em todas as versões do Gitleaks.
+
+[allowlist]
+paths = [
+    '''\.aiox-core/''',
+    '''\.git/''',
+    '''docs/'''
+]
