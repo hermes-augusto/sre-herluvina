@@ -38,6 +38,8 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - .env
+    environment:
+      HOME: /tmp
     volumes:
       - ./data:/app/data
       - ./bin:/app/bin
@@ -59,6 +61,8 @@ services:
       - "8501:8501"
     env_file:
       - .env
+    environment:
+      HOME: /tmp
     volumes:
       - ./data:/app/data
       - ./app:/app/app
